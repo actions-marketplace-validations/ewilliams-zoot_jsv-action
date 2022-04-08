@@ -13,9 +13,6 @@ inputs:
       A space-delimited list of key-values, separated by a colon. The keys should match
       against the keys used in the key-and-schema input.
     required: true
-outputs:
-  time:
-    description: 'The time we greeted you'
 runs:
   using: 'node16'
   main: 'index.js'

@@ -31,13 +31,13 @@ async function run() {
             if (fileSchemaMap.has(keyFilePair[0])) {
                 fileSchemaMap.get(keyFilePair[0])["file"] = keyFilePair[1];
             } else {
-                fileSchemaMap.set(keyFilePair[0], {});
+                fileSchemaMap.set(keyFilePair[0], {});// initialize
             }
 
             if (fileSchemaMap.has(keySchemaPair[0])) {
                 fileSchemaMap.get(keySchemaPair[0])["schema"] = keySchemaPair[1];
             } else {
-                fileSchemaMap.set(keySchemaPair[0], {});
+                fileSchemaMap.set(keySchemaPair[0], {});// initialize
             }
         }
 
@@ -49,7 +49,7 @@ async function run() {
         const validateResults = await Promise.all(validateResultPromises);
         const valids = validateResults.filter((isValid) => isValid);
 
-        if (valids.length < validateResults) {
+        if (valids.length < validateResults.length) {
             core.warning("Some of your JSON files are not valid against the schema used");
             return;
         }
