@@ -1,0 +1,21 @@
+name: 'JSON Schema Validator'
+author: 'Ezekiel Williams'
+description: 'This action allows you to choose which JSON files will be validated and with which schema that is to occur'
+inputs:
+  key-and-file:
+    description: >
+      A space-delimited list of key-values, separated by a colon. The keys will be used
+      in the key-and-schema input to tie JSON files to schemas for validation. The right
+      side of the colon must contain a path to a JSON file.
+    required: true
+  key-and-schema:
+    description: >
+      A space-delimited list of key-values, separated by a colon. The keys should match
+      against the keys used in the key-and-schema input.
+    required: true
+outputs:
+  time:
+    description: 'The time we greeted you'
+runs:
+  using: 'node16'
+  main: 'index.js'

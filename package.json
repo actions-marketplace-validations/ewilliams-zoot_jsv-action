@@ -1,0 +1,25 @@
+{
+  "name": "jsv-action",
+  "version": "1.0.0",
+  "description": "An Action that validates your JSON files against JSON schemas",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ewilliams-zoot/jsv-action.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ewilliams-zoot/jsv-action/issues"
+  },
+  "homepage": "https://github.com/ewilliams-zoot/jsv-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.1",
+    "ajv": "^8.11.0"
+  }
+}
