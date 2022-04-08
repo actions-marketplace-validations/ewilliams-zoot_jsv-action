@@ -1,14 +1,11 @@
 const core = require('@actions/core');
-const fs = require('fs/promises');
-const Ajv = require('ajv');
-const promisify = require('util').promisify;
-
-
-const promiseJsonParse = promisify(JSON.parse);
+const { validateSchema, createConfigMap } = require('./src/helpers.js');
 
 
 async function run() {
     try {
+        core.info(`Current directory: ${__dirname}`);
+        
         const keyAndFile = core.getInput('key-and-file');
         const keyAndSchema = core.getInput('key-and-schema');
 
@@ -18,28 +15,7 @@ async function run() {
             throw Error("File list and schema list need to be the same length and greater than zero");
         }
 
-        const fileSchemaMap = new Map();
-
-        // Populates map with objects that will look like this
-        // { file: "/src/file.json", schema: "/src/schemas/schema1.json"}
-        // This is designed to support users adding files and keys in any order
-        // in the yaml definition.
-        for (let i = 0; i < keyFiles.length; ++i) {
-            const keyFilePair = keyFiles[i].split(":");// ["f1", "/src/file.json"]
-            const keySchemaPair = keySchemas[i].split(":");// ["f1", "/src/schemas/schema1.json"]
-
-            if (fileSchemaMap.has(keyFilePair[0])) {
-                fileSchemaMap.get(keyFilePair[0])["file"] = keyFilePair[1];
-            } else {
-                fileSchemaMap.set(keyFilePair[0], {});// initialize
-            }
-
-            if (fileSchemaMap.has(keySchemaPair[0])) {
-                fileSchemaMap.get(keySchemaPair[0])["schema"] = keySchemaPair[1];
-            } else {
-                fileSchemaMap.set(keySchemaPair[0], {});// initialize
-            }
-        }
+        const fileSchemaMap = createConfigMap(keyFiles, keySchemas);
 
         const validateResultPromises = [];
         fileSchemaMap.forEach((config) => {
@@ -64,31 +40,4 @@ async function run() {
 run();
 
 
-/**
- * Validates a file-schema pair
- * @param {{ file: string, schema: string }} fileSchemaConfig 
- * @returns {Promise<bool>}
- */
-async function validateSchema(fileSchemaConfig) {
-    try {
-        const readResults = await Promise.all([
-            fs.readFile(fileSchemaConfig.file),
-            fs.readFile(fileSchemaConfig.schema)
-        ]);
-
-        const parsedResults = await Promise.all([
-            promiseJsonParse(readResults[0]),// file
-            promiseJsonParse(readResults[1])// JSON schema
-        ]);
-
-        const ajv = new Ajv();
-        const validate = ajv.compile(parsedResults[1]);
-
-        const isValid = validate(parsedResults[0]);
-        return isValid;
-
-    } catch (e) {
-        throw Error(`Could not read file-schema pair: '${fileSchemaConfig.file}', '${fileSchemaConfig.schema}'\n${e.message}`);
-    }
-}
 
