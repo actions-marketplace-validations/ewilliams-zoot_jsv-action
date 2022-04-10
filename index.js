@@ -4,15 +4,19 @@ const { validateSchema, createConfigMap } = require('./src/helpers.js');
 
 async function run() {
     try {
-        core.info(`Current directory: ${__dirname}`);
-        
+        core.info(`Files and schemas will be relative to this directory: "${__dirname}"`);
+
         const keyAndFile = core.getInput('key-and-file');
         const keyAndSchema = core.getInput('key-and-schema');
 
+        core.info(`File list specified: "${keyAndFile}"`);
+        core.info(`Schema list specified: "${keyAndSchema}`);
+
         const keyFiles = keyAndFile.split(' ');
         const keySchemas = keyAndSchema.split(' ');
-        if (keyFiles.length !== keySchemas.length || keyFiles.length === 0) {
-            throw Error("File list and schema list need to be the same length and greater than zero");
+
+        if (keyFiles.length < keySchemas.length || keyFiles.length === 0 || keySchemas.length === 0) {
+            throw Error("Your file list should be equal to or longer than your schema list");
         }
 
         const fileSchemaMap = createConfigMap(keyFiles, keySchemas);

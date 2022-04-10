@@ -1,8 +1,17 @@
+const core = require('@actions/core');
 const fs = require('fs/promises');
 const Ajv = require('ajv');
-const promisify = require('util').promisify;
 
-const promiseJsonParse = promisify(JSON.parse);
+const promiseJsonParse = (jsonStr) => {
+    return new Promise((res, rej) => {
+        try {
+        const obj = JSON.parse(jsonStr);
+        res(obj);
+        } catch (e) {
+            rej(`Failed to parse JSON string: ${e}`);
+        }
+    });
+};
 
 
 exports.createConfigMap = createConfigMap;
@@ -19,25 +28,39 @@ exports.validateSchema = validateSchema;
     const fileSchemaMap = new Map();
 
     // Populates map with objects that will look like this
-    // { file: "/src/file.json", schema: "/src/schemas/schema1.json"}
+    // { files: [ "/src/file.json" ], schema: "/src/schemas/schema1.json"}
     // This is designed to support users adding files and keys in any order
     // in the yaml definition.
-    for (let i = 0; i < filesList.length; ++i) {
-        const keyFilePair = filesList[i].split(":");// ["f1", "/src/file.json"]
+    filesList.forEach((keyFile, i) => {
+        const keyFilePair = keyFile.split(":");
+        const fileKey = keyFilePair[0];
+        const filePath = keyFilePair[1];
+
+        if (fileSchemaMap.has(fileKey) && fileSchemaMap.get(fileKey).files) {
+            fileSchemaMap.get(fileKey).files.push(filePath);
+        } else {
+            fileSchemaMap.set(fileKey, { files: [ filePath ] });// initialize
+        }
+
+        if (!schemasList[i]) return;
+
         const keySchemaPair = schemasList[i].split(":");// ["f1", "/src/schemas/schema1.json"]
+        const schemaKey = keySchemaPair[0];
+        const schemaPath = keySchemaPair[1];
 
-        if (fileSchemaMap.has(keyFilePair[0])) {
-            fileSchemaMap.get(keyFilePair[0])["file"] = keyFilePair[1];
-        } else {
-            fileSchemaMap.set(keyFilePair[0], { file: keyFilePair[1] });// initialize
-        }
+        if (fileSchemaMap.has(schemaKey)) {
+            /** @type {Object} */
+            const configObj = fileSchemaMap.get(schemaKey);
+            if (configObj.schema) {
+                core.warning("You have two schemas with the same key; ignoring all but the first appearance in the list...");
+                return;
+            }
+            configObj.schema = schemaPath;
 
-        if (fileSchemaMap.has(keySchemaPair[0])) {
-            fileSchemaMap.get(keySchemaPair[0])["schema"] = keySchemaPair[1];
         } else {
-            fileSchemaMap.set(keySchemaPair[0], { schema: keySchemaPair[1] });// initialize
+            fileSchemaMap.set(schemaKey, { schema: schemaPath });// initialize
         }
-    }
+    });
 
     return fileSchemaMap;
 }
@@ -45,27 +68,36 @@ exports.validateSchema = validateSchema;
 
 /**
  * Validates a file-schema pair
- * @param {{ file: string, schema: string }} fileSchemaConfig 
+ * @param {{ files: string[], schema: string }} fileSchemaConfig 
  * @returns {Promise<bool>}
  */
 async function validateSchema(fileSchemaConfig) {
     try {
-        const readResults = await Promise.all([
-            fs.readFile(fileSchemaConfig.file),
-            fs.readFile(fileSchemaConfig.schema)
-        ]);
+        const fileReadPromises = [];
+        fileSchemaConfig.files.forEach((filePath) => {
+            fileReadPromises.push(fs.readFile(filePath));
+        });
+        fileReadPromises.push(fs.readFile(fileSchemaConfig.schema));
 
-        
-        const fileObj = JSON.parse(readResults[0].toString());
-        const schemaObj = JSON.parse(readResults[1].toString());
+        const readResults = await Promise.all(fileReadPromises);
+
+        const parsePromises = [];
+        readResults.forEach((result) => {
+            parsePromises.push(promiseJsonParse(result.toString("utf-8")));
+        });
+        const parseResults = await Promise.all(parsePromises);
 
         const ajv = new Ajv();
-        const validate = ajv.compile(schemaObj);
+        const validate = ajv.compile(parseResults[parseResults.length - 1]);
 
-        const isValid = validate(fileObj);
-        return isValid;
+        let allValid = true;
+        for (let i = 0; i < parseResults.length - 1; ++i) {
+            if (!validate(parseResults[i])) allValid = false;
+        }
+        
+        return allValid;
 
     } catch (e) {
-        throw Error(`Could not read file-schema pair: '${fileSchemaConfig.file}', '${fileSchemaConfig.schema}'\n${e.message}`);
+        throw Error(`Could not read file-schema pair: ${e.message}`);
     }
 }
