@@ -1,11 +1,10 @@
 const { validateSchema, createConfigMap } = require('../src/helpers.js');
 
 
-const fileStr = [`test:${__dirname}/resources/test_file.json`];
+const fileStr = [`test:${__dirname}/resources/test_file.json`, `test:${__dirname}/resources/test_file_2.json`];
 const schemaStr = [`test:${__dirname}/resources/test_schema.json`];
 
 const map = createConfigMap(fileStr, schemaStr);
-//console.log(map);
 
 
 validateSchema(map.get("test"))

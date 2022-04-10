@@ -9,6 +9,11 @@ You need to use the `actions/checkout` action so the validation code can read yo
 
 ## Inputs
 
+Rules
+1. The `key-and-file` list should always be equal to or longer than the `key-and-schema` list
+2. You can reference the same schema key in multiple `key-and-file` entries
+3. For each key, you must have at least one file and one schema
+
 ### key-and-file
 
 This input is a space-delimited string of keys and JSON files. The format is `key:file`, where the `key` is used to pair against the keys used in the `key-and-schema` input.
@@ -22,7 +27,7 @@ This input is a space-delimited string of keys and JSON files. The format is `ke
 
 ### key-and-schema
 
-This input takes in the same format as the `key-and-file` input but references the JSON schemas you want to use to validat the JSON files in the `key-and-file` list.
+This input takes in the same format as the `key-and-file` input but references the JSON schemas you want to use to validate the JSON files in the `key-and-file` list.
 
 **Building on Example**
 ```yml
@@ -54,4 +59,23 @@ jobs:
         with:
           key-and-file: 'users:users.json accounts:accounts.json'
           key-and-schema: 'users:user_schema.json accounts:account_schema.json'
+```
+<hr/>
+
+### Full Example With Multiple File Keys
+
+Note how there are two files in the `key-and-file` list that reference the `person` key. If files share the same schema, you can save typing in the `key-and-schema` list. Hopefully soon I'll get to supporting globs to save even more typing.
+
+```yml
+name: Validate My JSON
+on: [push]
+jobs:
+  validate-json-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ewilliams-zoot/jsv-action@v1
+        with:
+          key-and-file: 'person:users.json person:black_list.json accounts:accounts.json'
+          key-and-schema: 'person:person_schema.json accounts:account_schema.json'
 ```
