@@ -1,4 +1,4 @@
-name: 'JSON Schema Validator'
+name: 'JSON File Validator'
 author: 'Ezekiel Williams'
 description: 'This action allows you to choose which JSON files will be validated and with which schema that is to occur'
 inputs:
@@ -16,3 +16,6 @@ inputs:
 runs:
   using: 'node16'
   main: 'index.js'
+branding:
+  icon: 'cpu'
+  color: 'purple'
