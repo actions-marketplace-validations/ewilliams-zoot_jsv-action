@@ -1,6 +1,6 @@
 # jsv-action
 
-An Action that validates any JSON files in your project against JSON schemas that are also in your project.
+An Action that validates any JSON files in your project against JSON schemas that are also in your project. This action uses the [Ajv project](https://www.npmjs.com/package/ajv) to compile schemas and validate JSON using the 07 draft of the [JSON schema](https://json-schema.org/).
 
 This action currently doesn't support file globs; you must pair any JSON files against the schema you want to use for validation for each file.
 
@@ -58,7 +58,7 @@ jobs:
       - uses: ewilliams-zoot/jsv-action@v1
         with:
           key-and-file: 'users:users.json accounts:accounts.json'
-          key-and-schema: 'users:user_schema.json accounts:account_schema.json'
+          key-and-schema: 'accounts:account_schema.json users:user_schema.json'
 ```
 <hr/>
 
