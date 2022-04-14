@@ -54,7 +54,10 @@ exports.validateSchema = validateSchema;
             fileSchemaMap.get(fileKey).files.push(filePath);
         } else {
             core.info(`Starting new file list for key: '${fileKey}' -> '${filePath}`);
-            fileSchemaMap.set(fileKey, { files: [ filePath ] });// initialize
+            const objectToSet = fileSchemaMap.get(fileKey)
+                ? { ...existingKey, files: [ filePath ]}
+                : { files: [ filePath ]};
+            fileSchemaMap.set(fileKey, objectToSet);// initialize
         }
 
         if (!schemasList[i]) return;
@@ -70,11 +73,11 @@ exports.validateSchema = validateSchema;
                 core.warning("You have two schemas with the same key; ignoring all but the first appearance in the list...");
                 return;
             }
-            core.info(`Setting the schema for existing key: '${fileKey}' -> '${schemaPath}`);
+            core.info(`Setting the schema for existing key: '${schemaKey}' -> '${schemaPath}`);
             configObj.schema = schemaPath;
 
         } else {
-            core.info(`Setting the schema for new key: '${fileKey}' -> '${schemaPath}`);
+            core.info(`Setting the schema for new key: '${schemaKey}' -> '${schemaPath}`);
             fileSchemaMap.set(schemaKey, { schema: schemaPath });// initialize
         }
     });

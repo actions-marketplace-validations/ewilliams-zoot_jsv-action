@@ -50,8 +50,7 @@ async function run() {
         core.info("All JSON files were valid against schemas");
 
     } catch (e) {
-        core.error(`Failed build: ${e}`);
-        return 1;
+        core.setFailed(`Failed build: ${e}`);
     }
 }
 
