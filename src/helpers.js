@@ -54,8 +54,9 @@ exports.validateSchema = validateSchema;
             fileSchemaMap.get(fileKey).files.push(filePath);
         } else {
             core.info(`Starting new file list for key: '${fileKey}' -> '${filePath}`);
-            const objectToSet = fileSchemaMap.get(fileKey)
-                ? { ...existingKey, files: [ filePath ]}
+            const existingKeyObj = fileSchemaMap.get(fileKey);
+            const objectToSet = existingKeyObj
+                ? { ...existingKeyObj, files: [ filePath ]}
                 : { files: [ filePath ]};
             fileSchemaMap.set(fileKey, objectToSet);// initialize
         }
