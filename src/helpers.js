@@ -1,3 +1,16 @@
+/*
+MIT License
+
+Copyright (c) 2022 Ezekiel Williams
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+*/
+
 const core = require('@actions/core');
 const fs = require('fs/promises');
 const Ajv = require('ajv');
@@ -37,8 +50,10 @@ exports.validateSchema = validateSchema;
         const filePath = keyFilePair[1];
 
         if (fileSchemaMap.has(fileKey) && fileSchemaMap.get(fileKey).files) {
+            core.info(`Adding file to list: '${fileKey}' -> '${filePath}`);
             fileSchemaMap.get(fileKey).files.push(filePath);
         } else {
+            core.info(`Starting new file list for key: '${fileKey}' -> '${filePath}`);
             fileSchemaMap.set(fileKey, { files: [ filePath ] });// initialize
         }
 
@@ -55,13 +70,16 @@ exports.validateSchema = validateSchema;
                 core.warning("You have two schemas with the same key; ignoring all but the first appearance in the list...");
                 return;
             }
+            core.info(`Setting the schema for existing key: '${fileKey}' -> '${schemaPath}`);
             configObj.schema = schemaPath;
 
         } else {
+            core.info(`Setting the schema for new key: '${fileKey}' -> '${schemaPath}`);
             fileSchemaMap.set(schemaKey, { schema: schemaPath });// initialize
         }
     });
 
+    console.info(`Config map result`, fileSchemaMap);
     return fileSchemaMap;
 }
 
@@ -74,9 +92,11 @@ exports.validateSchema = validateSchema;
 async function validateSchema(fileSchemaConfig) {
     try {
         const fileReadPromises = [];
-        fileSchemaConfig.files.forEach((filePath) => {
+        fileSchemaConfig.files.forEach((filePath, i) => {
+            console.info(`Attempting to read JSON file [${i}]: ${filePath}`);
             fileReadPromises.push(fs.readFile(filePath));
         });
+        console.info(`Attempting to read schema file: ${fileSchemaConfig.schema}`);
         fileReadPromises.push(fs.readFile(fileSchemaConfig.schema));
 
         const readResults = await Promise.all(fileReadPromises);
